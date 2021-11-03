@@ -381,10 +381,15 @@ void RabbitMQClient::basicAckImpl(Biterp::CallContext& ctx) {
 void RabbitMQClient::basicRejectImpl(Biterp::CallContext& ctx) {
 	checkConnection();
 	uint64_t tag = ctx.longParam();
+	bool requeue = ctx.boolParam();
 	if (tag == 0) {
 		throw Biterp::Error("Message tag cannot be empty!");
 	}
-	connection->readChannel()->reject(tag);
+	int flags = 0;
+	if (requeue) {
+		flags = AMQP::requeue;
+	}
+	connection->readChannel()->reject(tag, flags);
 	this_thread::sleep_for(chrono::microseconds(10));
 }
 
